@@ -164,7 +164,24 @@ public class ProductServer {
           }
         }
         case 3 -> { //상품 삭제
+          try {
+            if (!error.isExistProduct(checkProduct.getNo(), products)) {
+              throw new ProductException(ErrorCode.PRODUCT_NO_INFORMATION);
+            }
 
+            //유효성 검사 모두 통과하면 상품 리스트 수정
+            Product deleteProduct = null;
+            for (Product product : products) {
+              if (product.getNo() == checkProduct.getNo()) {
+                deleteProduct = product;
+                break;
+              }
+            }
+            products.remove(deleteProduct);
+
+          } catch (Exception e) {
+            return new ResponseDto("fail", checkProduct);
+          }
         }
       }
       return new ResponseDto("success", checkProduct);

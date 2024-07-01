@@ -147,7 +147,28 @@ public class ProductClient {
 
   private static String deleteProduct(BufferedReader br) throws IOException {
     while (true) {
+      try {
+        System.out.println("[상품 삭제]");
+        System.out.print("상품 번호: ");
+        Product deleteProduct = null;
+        int productNo = Integer.parseInt(br.readLine());
+        if (!error.isExistProduct(productNo, products)) {
+          throw new ProductException(ErrorCode.PRODUCT_NO_INFORMATION);
+        }
 
+        for (Product product : products) {
+          if (product.getNo() == productNo) {
+            deleteProduct = new Product(productNo, product.getName(), product.getPrice(),
+                product.getStock());
+            break;
+          }
+        }
+        return makeJson(new RequestDto(3,
+            new Product(productNo, deleteProduct.getName(), deleteProduct.getPrice(),
+                deleteProduct.getStock())));
+      } catch (Exception e) {
+        e.getStackTrace();
+      }
     }
   }
 
