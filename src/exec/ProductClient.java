@@ -109,7 +109,39 @@ public class ProductClient {
 
   private static String updateProduct(BufferedReader br) throws IOException {
     while (true) {
+      try {
+        System.out.println("[상품 수정]");
+        System.out.print("상품 번호: ");
+        int productNo = Integer.parseInt(br.readLine());
+        if (!error.isExistProduct(productNo, products)) {
+          throw new ProductException(ErrorCode.PRODUCT_NO_INFORMATION);
+        }
 
+        System.out.print("상품 이름: ");
+        String name = br.readLine();
+        if (error.isExistName(name, products)) {
+          throw new ProductException(ErrorCode.EXIST_ALREADY_NAME);
+        }
+        if (!error.isValidName(name)) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_CHARACTER);
+        }
+
+        System.out.print("상품 가격: ");
+        int price = Integer.parseInt(br.readLine());
+        if (error.isValidNumber(String.valueOf(price))) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+        }
+
+        System.out.print("상품 재고: ");
+        int stock = Integer.parseInt(br.readLine());
+        if (error.isValidNumber(String.valueOf(stock))) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+        }
+
+        return makeJson(new RequestDto(3, new Product(productNo, name, price, stock)));
+      } catch (Exception e) {
+        e.getStackTrace();
+      }
     }
   }
 

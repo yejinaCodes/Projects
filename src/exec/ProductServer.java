@@ -131,7 +131,37 @@ public class ProductServer {
           }
         }
         case 2 -> { //상품 수정
+          try {
+            if (!error.isExistProduct(checkProduct.getNo(), products)) {
+              throw new ProductException(ErrorCode.PRODUCT_NO_INFORMATION);
+            }
+            if (error.isExistName(checkProduct.getName(), products)) {
+              throw new ProductException(ErrorCode.EXIST_ALREADY_NAME);
+            }
+            if (error.isValidName(checkProduct.getName())) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_CHARACTER);
+            }
+            if (error.isValidNumber(String.valueOf(checkProduct.getPrice()))) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+            }
+            if (error.isValidNumber(String.valueOf(checkProduct.getStock()))) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+            }
 
+            //유효성 검사 모두 통과하면 상품 리스트 수정
+            Product deleteProduct = null;
+            for (Product product : products) {
+              if (product.getNo() == checkProduct.getNo()) {
+                deleteProduct = product;
+                break;
+              }
+            }
+            products.remove(deleteProduct);
+            products.add(checkProduct);
+
+          } catch (Exception e) {
+            return new ResponseDto("fail", checkProduct);
+          }
         }
         case 3 -> { //상품 삭제
 
