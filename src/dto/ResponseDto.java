@@ -1,10 +1,12 @@
 package dto;
 
+import java.util.List;
+
 public class ResponseDto {
   private String status;
-  private Product data;
+  private List<Product> data;
 
-  public ResponseDto(String status, Product data) {
+  public ResponseDto(String status, List<Product> data) {
     this.status = status;
     this.data = data;
   }
@@ -13,7 +15,7 @@ public class ResponseDto {
     return status;
   }
 
-  public Product getData() {
+  public List<Product> getData() {
     return data;
   }
 

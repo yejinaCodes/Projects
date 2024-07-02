@@ -20,7 +20,7 @@ public class ProductClient {
 
   private static final String HOST = "127.0.0.1";
   private static final int PORT_NUMBER = 8080;
-  private static final List<Product> products = new ArrayList<>();
+  private static List<Product> products = new ArrayList<>();
   private static final ProductExceptionList error = new ProductExceptionList();
 
   public static void main(String[] args) {
@@ -58,16 +58,9 @@ public class ProductClient {
           }
           default -> System.out.println("다시 입력해주세요.\n");
         }
-
-        //success -> 리스트 만듦
         ResponseDto response = parseJson(clientReader.readLine());
-        System.out.println("response Client!! = " + response.getStatus());
-        if (response.getStatus().equals("success")) {
-
-          Product newProduct = new Product(response.getData().getNo(), response.getData().getName(),
-              response.getData().getPrice(), response.getData().getStock());
-          products.add(newProduct);
-        }
+        products = new ArrayList<>();
+        products.addAll(response.getData());
       }
 
     } catch (IOException e) {
@@ -113,6 +106,9 @@ public class ProductClient {
         System.out.println("[상품 수정]");
         System.out.print("상품 번호: ");
         int productNo = Integer.parseInt(br.readLine());
+        if (error.isValidNumber(String.valueOf(productNo))) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+        }
         if (!error.isExistProduct(productNo, products)) {
           throw new ProductException(ErrorCode.PRODUCT_NO_INFORMATION);
         }
@@ -122,7 +118,7 @@ public class ProductClient {
         if (error.isExistName(name, products)) {
           throw new ProductException(ErrorCode.EXIST_ALREADY_NAME);
         }
-        if (!error.isValidName(name)) {
+        if (error.isValidName(name)) {
           throw new ProductException(ErrorCode.INVALID_INPUT_CHARACTER);
         }
 
@@ -138,7 +134,7 @@ public class ProductClient {
           throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
         }
 
-        return makeJson(new RequestDto(3, new Product(productNo, name, price, stock)));
+        return makeJson(new RequestDto(2, new Product(productNo, name, price, stock)));
       } catch (Exception e) {
         e.getStackTrace();
       }
@@ -173,7 +169,7 @@ public class ProductClient {
   }
 
   private static void printMenu() {
-    System.out.println("---------------------------------------------");
+    System.out.println("\n---------------------------------------------");
     System.out.printf("%-5s %-15s %-10s %-5s\n", "no", "name", "price", "stock");
     System.out.println("---------------------------------------------");
   }

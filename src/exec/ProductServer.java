@@ -16,6 +16,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class ProductServer {
@@ -81,20 +82,10 @@ public class ProductServer {
           ResponseDto response = productService(request);
 
           // makeJson
-          String jsonString = makeJson(productService(request));
+          String jsonString = makeJson(response);
 
           // response 반환
           serverWriter.println(jsonString);
-
-          //success -> 수정된 list 보냄
-          if (response.getStatus().equals("success")) {
-            for (Product product : products) {
-              serverWriter.println(product.getNo());
-              serverWriter.println(product.getName());
-              serverWriter.println(product.getPrice());
-              serverWriter.println(product.getStock());
-            }
-          }
           serverWriter.flush();
         }
       } catch (IOException e) {
@@ -105,8 +96,7 @@ public class ProductServer {
     // 유효성 검사, 상품 리스트 생성, 수정, 삭제
     private static ResponseDto productService(RequestDto request) {
       Product checkProduct = request.getData();
-      //1. request를 보고 리스트에 넣을지 말지 본다.
-      //2. 넣을 수 있든 아니든 ResponseDto -> Json 해서 클라이언트에게 전달
+
       switch (request.getMenu()) {
         case 1 -> { //상품 생성
           try {
@@ -124,14 +114,19 @@ public class ProductServer {
             }
 
             //유효성 검사 모두 통과하면 상품 리스트에 추가
-            products.add(checkProduct);
+            products.add(new Product(productNo++, checkProduct.getName(), checkProduct.getPrice(),
+                checkProduct.getStock()));
+            return new ResponseDto("success", products);
 
           } catch (Exception e) {
-            return new ResponseDto("fail", checkProduct);
+            return new ResponseDto("fail", products);
           }
         }
-        case 2 -> { //상품 수정
+
+        // 상품 수정
+        case 2 -> {
           try {
+            System.out.println("checkProduct.getNo() = " + checkProduct.getNo());
             if (!error.isExistProduct(checkProduct.getNo(), products)) {
               throw new ProductException(ErrorCode.PRODUCT_NO_INFORMATION);
             }
@@ -158,9 +153,11 @@ public class ProductServer {
             }
             products.remove(deleteProduct);
             products.add(checkProduct);
+            products.sort((Comparator.comparingInt(Product::getNo)));
+            return new ResponseDto("success", products);
 
           } catch (Exception e) {
-            return new ResponseDto("fail", checkProduct);
+            return new ResponseDto("fail", products);
           }
         }
         case 3 -> { //상품 삭제
@@ -178,22 +175,27 @@ public class ProductServer {
               }
             }
             products.remove(deleteProduct);
+            return new ResponseDto("success", products);
 
           } catch (Exception e) {
-            return new ResponseDto("fail", checkProduct);
+            return new ResponseDto("fail", products);
           }
         }
       }
-      return new ResponseDto("success", checkProduct);
+      return null;
     }
 
     private static String makeJson(ResponseDto response) {
       Gson json = new Gson();
-      return json.toJson(response);
+      String jsonString = json.toJson(response);
+      System.out.println("request = " + jsonString);
+      System.out.println();
+      return jsonString;
     }
 
     private static RequestDto parseJson(String jsonString) {
       Gson json = new Gson();
+      System.out.println("response = " + jsonString);
       return json.fromJson(jsonString, RequestDto.class);
     }
   }
