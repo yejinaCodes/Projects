@@ -93,24 +93,44 @@ public class ProductServer {
       }
     }
 
-    // 유효성 검사, 상품 리스트 생성, 수정, 삭제
+    // 상품 리스트 생성, 수정, 삭제 진행 (유효성 검사)
     private static ResponseDto productService(RequestDto request) {
       Product checkProduct = request.getData();
 
       switch (request.getMenu()) {
         case 1 -> { //상품 생성
           try {
-            if (error.isExistName(checkProduct.getName(), products)) {
-              throw new ProductException(ErrorCode.EXIST_ALREADY_NAME);
+            // name 검사
+            if (checkProduct.getName().isEmpty()) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
             }
             if (error.isValidName(checkProduct.getName())) {
               throw new ProductException(ErrorCode.INVALID_INPUT_CHARACTER);
             }
+            if (error.isExistName(checkProduct.getName(), products)) {
+              throw new ProductException(ErrorCode.EXIST_ALREADY_NAME);
+            }
+
+            // price 검사
+            if (String.valueOf(checkProduct.getPrice()).isEmpty()) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+            }
             if (error.isValidNumber(String.valueOf(checkProduct.getPrice()))) {
               throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
             }
+            if (error.isValidPrice(String.valueOf(checkProduct.getPrice()))) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_PRICE);
+            }
+
+            // stock 검사
+            if (String.valueOf(checkProduct.getStock()).isEmpty()) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_STOCK);
+            }
             if (error.isValidNumber(String.valueOf(checkProduct.getStock()))) {
               throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+            }
+            if (error.isValidStock(String.valueOf(checkProduct.getStock()))) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_STOCK);
             }
 
             //유효성 검사 모두 통과하면 상품 리스트에 추가
@@ -126,21 +146,48 @@ public class ProductServer {
         // 상품 수정
         case 2 -> {
           try {
-            System.out.println("checkProduct.getNo() = " + checkProduct.getNo());
+            // productNo 검사
+            if (String.valueOf(checkProduct.getNo()).isEmpty()) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+            }
+            if (error.isValidNumber(String.valueOf(checkProduct.getNo()))) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+            }
             if (!error.isExistProduct(checkProduct.getNo(), products)) {
               throw new ProductException(ErrorCode.PRODUCT_NO_INFORMATION);
             }
-            if (error.isExistName(checkProduct.getName(), products)) {
-              throw new ProductException(ErrorCode.EXIST_ALREADY_NAME);
+
+            // name 검사
+            if (checkProduct.getName().isEmpty()) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
             }
             if (error.isValidName(checkProduct.getName())) {
               throw new ProductException(ErrorCode.INVALID_INPUT_CHARACTER);
             }
+            if (error.isExistName(checkProduct.getName(), products)) {
+              throw new ProductException(ErrorCode.EXIST_ALREADY_NAME);
+            }
+
+            // price 검사
+            if (String.valueOf(checkProduct.getPrice()).isEmpty()) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+            }
             if (error.isValidNumber(String.valueOf(checkProduct.getPrice()))) {
               throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
             }
+            if (error.isValidPrice(String.valueOf(checkProduct.getPrice()))) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_PRICE);
+            }
+
+            // stock 검사
+            if (String.valueOf(checkProduct.getStock()).isEmpty()) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_STOCK);
+            }
             if (error.isValidNumber(String.valueOf(checkProduct.getStock()))) {
               throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+            }
+            if (error.isValidStock(String.valueOf(checkProduct.getStock()))) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_STOCK);
             }
 
             //유효성 검사 모두 통과하면 상품 리스트 수정
@@ -162,6 +209,13 @@ public class ProductServer {
         }
         case 3 -> { //상품 삭제
           try {
+            // productNo 검사
+            if (String.valueOf(productNo).isEmpty()) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+            }
+            if (error.isValidNumber(String.valueOf(productNo))) {
+              throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+            }
             if (!error.isExistProduct(checkProduct.getNo(), products)) {
               throw new ProductException(ErrorCode.PRODUCT_NO_INFORMATION);
             }

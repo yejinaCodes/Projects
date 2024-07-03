@@ -17,6 +17,7 @@ public class ProductExceptionList {
     return false;
   }
 
+
   public boolean isValidName(String name) {
     String regex = "^[a-zA-Z]*$";
     Pattern pattern = Pattern.compile(regex);
@@ -25,6 +26,14 @@ public class ProductExceptionList {
       return true;
     }
     return false;
+  }
+
+  public boolean isValidPrice(String price) {
+    return !(Integer.parseInt(price) > 0 && Integer.parseInt(price) < 10000);
+  }
+
+  public boolean isValidStock(String stock) {
+    return !(Integer.parseInt(stock) > 0 && Integer.parseInt(stock) < 100);
   }
 
   public boolean isExistName(String name, List<Product> products) {

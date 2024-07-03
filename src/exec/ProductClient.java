@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.ProtocolException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +76,10 @@ public class ProductClient {
         System.out.print("상품 이름: ");
         String name = br.readLine();
 
+        // 유효성 검사: 빈문자, 문자형식, 이미 존재하는 이름인지
+        if (name.isEmpty()) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+        }
         if (error.isExistName(name, products)) {
           throw new ProductException(ErrorCode.EXIST_ALREADY_NAME);
         }
@@ -83,17 +88,33 @@ public class ProductClient {
         }
 
         System.out.print("상품 가격: ");
-        int price = Integer.parseInt(br.readLine());
-        if (error.isValidNumber(String.valueOf(price))) {
+        String price = br.readLine();
+
+        // 유효성 검사: 빈문자, 숫자형식, 1~9999원
+        if (price.isEmpty()) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+        }
+        if (error.isValidNumber(price)) {
           throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+        }
+        if (error.isValidPrice(price)) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_PRICE);
         }
 
         System.out.print("상품 재고: ");
-        int stock = Integer.parseInt(br.readLine());
-        if (error.isValidNumber(String.valueOf(stock))) {
+        String stock = br.readLine();
+
+        // 유효성 검사: 빈문자, 숫자형식, 1~99개
+        if (stock.isEmpty()) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+        }
+        if (error.isValidNumber(stock)) {
           throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
         }
-        return makeJson(new RequestDto(1, new Product(0, name, price, stock)));
+        if (error.isValidStock(stock)) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_STOCK);
+        }
+        return makeJson(new RequestDto(1, new Product(0, name, Integer.parseInt(price), Integer.parseInt(stock))));
       } catch (Exception e) {
         e.getStackTrace();
       }
@@ -105,16 +126,26 @@ public class ProductClient {
       try {
         System.out.println("[상품 수정]");
         System.out.print("상품 번호: ");
-        int productNo = Integer.parseInt(br.readLine());
-        if (error.isValidNumber(String.valueOf(productNo))) {
+        String productNo = br.readLine();
+
+        // 유효성 검사: 빈문자, 숫자형식, 존재하는 상품인지
+        if (productNo.isEmpty()) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+        }
+        if (error.isValidNumber(productNo)) {
           throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
         }
-        if (!error.isExistProduct(productNo, products)) {
+        if (!error.isExistProduct(Integer.parseInt(productNo), products)) {
           throw new ProductException(ErrorCode.PRODUCT_NO_INFORMATION);
         }
 
         System.out.print("상품 이름: ");
         String name = br.readLine();
+
+        // 유효성 검사: 빈문자, 문자형식, 이미 존재하는 이름인지
+        if (name.isEmpty()) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+        }
         if (error.isExistName(name, products)) {
           throw new ProductException(ErrorCode.EXIST_ALREADY_NAME);
         }
@@ -123,18 +154,34 @@ public class ProductClient {
         }
 
         System.out.print("상품 가격: ");
-        int price = Integer.parseInt(br.readLine());
-        if (error.isValidNumber(String.valueOf(price))) {
+        String price = br.readLine();
+
+        // 유효성 검사: 빈문자, 숫자형식, 1~9999원
+        if (price.isEmpty()) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+        }
+        if (error.isValidNumber(price)) {
           throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+        }
+        if (error.isValidPrice(price)) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_PRICE);
         }
 
         System.out.print("상품 재고: ");
-        int stock = Integer.parseInt(br.readLine());
-        if (error.isValidNumber(String.valueOf(stock))) {
+        String stock = br.readLine();
+
+        // 유효성 검사: 빈문자, 숫자형식, 1~99개
+        if (stock.isEmpty()) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+        }
+        if (error.isValidNumber(stock)) {
           throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
         }
+        if (error.isValidStock(stock)) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_STOCK);
+        }
 
-        return makeJson(new RequestDto(2, new Product(productNo, name, price, stock)));
+        return makeJson(new RequestDto(2, new Product(Integer.parseInt(productNo), name, Integer.parseInt(price), Integer.parseInt(stock))));
       } catch (Exception e) {
         e.getStackTrace();
       }
@@ -147,20 +194,28 @@ public class ProductClient {
         System.out.println("[상품 삭제]");
         System.out.print("상품 번호: ");
         Product deleteProduct = null;
-        int productNo = Integer.parseInt(br.readLine());
-        if (!error.isExistProduct(productNo, products)) {
+        String productNo = br.readLine();
+
+        // 유효성 검사: 빈문자, 숫자형식, 존재하는 상품인지
+        if (productNo.isEmpty()) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_BLANK);
+        }
+        if (error.isValidNumber(productNo)) {
+          throw new ProductException(ErrorCode.INVALID_INPUT_NUMBER);
+        }
+        if (!error.isExistProduct(Integer.parseInt(productNo), products)) {
           throw new ProductException(ErrorCode.PRODUCT_NO_INFORMATION);
         }
 
         for (Product product : products) {
-          if (product.getNo() == productNo) {
-            deleteProduct = new Product(productNo, product.getName(), product.getPrice(),
+          if (product.getNo() == Integer.parseInt(productNo)) {
+            deleteProduct = new Product(Integer.parseInt(productNo), product.getName(), product.getPrice(),
                 product.getStock());
             break;
           }
         }
         return makeJson(new RequestDto(3,
-            new Product(productNo, deleteProduct.getName(), deleteProduct.getPrice(),
+            new Product(Integer.parseInt(productNo), deleteProduct.getName(), deleteProduct.getPrice(),
                 deleteProduct.getStock())));
       } catch (Exception e) {
         e.getStackTrace();
