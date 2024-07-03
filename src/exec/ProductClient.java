@@ -75,7 +75,6 @@ public class ProductClient {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     /**
@@ -99,7 +98,6 @@ public class ProductClient {
                 ArrayList<Product> products = new ArrayList<>();
                 for (Object json : jsonArray) {
                     JSONObject jsonProduct = (JSONObject) json;
-                    System.out.println(jsonProduct.toJSONString());
                     Product product = new Product(
                             ((Long) jsonProduct.get("no")).intValue(),
                             (String) jsonProduct.get("name"),
@@ -153,25 +151,25 @@ public class ProductClient {
             System.out.println("[상품 생성]");
             System.out.print("상품 이름: ");
             String name = sc.nextLine();
-            if(ProductValidator.isEmptyValue(name)) {
+            if(ProductValidator.validateName(name)) {
                 System.out.println("상품 이름은 빈 값을 입력할 수 없습니다.");
                 continue;
             }
             System.out.print("상품 가격: ");
             String price = sc.nextLine();
-            if(!ProductValidator.isPositiveInteger(price)) {
-                System.out.println("상품 가격은 1원 이상을 입력해주세요.");
+            if(!ProductValidator.validatePrice(price)) {
+                System.out.println("상품 가격은 1~9999 범위로 입력해주세요.");
                 continue;
             }
             System.out.print("상품 재고: ");
             String stock = sc.nextLine();
-            if(!ProductValidator.isPositiveInteger(stock)) {
-                System.out.println("상품 재고는 1원 이상을 입력해주세요.");
+            if(!ProductValidator.validateStock(stock)) {
+                System.out.println("상품 재고는 1~999 범위로 입력해주세요.");
                 continue;
             }
             product.put("name", name);
-            product.put("price", Integer.parseInt(price));
-            product.put("stock", Integer.parseInt(stock));
+            product.put("price", price);
+            product.put("stock", stock);
             break;
         }
         return product;
@@ -189,32 +187,32 @@ public class ProductClient {
             System.out.println("[상품 수정]");
             System.out.print("상품 번호: ");
             String no = sc.nextLine();
-            if(!ProductValidator.isPositiveInteger(no)) {
+            if(!ProductValidator.validateNo(no)) {
                 System.out.println("상품 번호는 1 이상의 숫자를 입력해주세요.");
                 continue;
             }
-            System.out.print("이름 변경");
+            System.out.print("이름 변경: ");
             String name = sc.nextLine();
-            if(ProductValidator.isEmptyValue(name)) {
+            if(ProductValidator.validateName(name)) {
                 System.out.println("상품 이름은 빈 값을 입력할 수 없습니다.");
                 continue;
             }
             System.out.print("가격 변경: ");
             String price = sc.nextLine();
-            if(!ProductValidator.isPositiveInteger(price)) {
-                System.out.println("상품 가격은 1원 이상을 입력해주세요.");
+            if(!ProductValidator.validatePrice(price)) {
+                System.out.println("상품 가격은 1~9999 범위로 입력해주세요.");
                 continue;
             }
             System.out.print("재고 변경: ");
             String stock = sc.nextLine();
-            if(!ProductValidator.isPositiveInteger(stock)) {
-                System.out.println("상품 재고는 1원 이상을 입력해주세요.");
+            if(!ProductValidator.validateStock(stock)) {
+                System.out.println("상품 재고는 1~999 범위로 입력해주세요.");
                 continue;
             }
             product.put("no", Integer.parseInt(no));
             product.put("name", name);
-            product.put("price", Integer.parseInt(price));
-            product.put("stock", Integer.parseInt(stock));
+            product.put("price", price);
+            product.put("stock", stock);
             break;
         }
         return product;
@@ -232,11 +230,11 @@ public class ProductClient {
             System.out.println("[상품 삭제]");
             System.out.print("상품 번호: ");
             String no = sc.nextLine();
-            if(!ProductValidator.isPositiveInteger(no)) {
+            if(!ProductValidator.validateNo(no)) {
                 System.out.println("상품 번호는 1 이상의 숫자를 입력해주세요.");
                 continue;
             }
-            product.put("no", Integer.parseInt(no));
+            product.put("no", no);
             break;
         }
         return product;

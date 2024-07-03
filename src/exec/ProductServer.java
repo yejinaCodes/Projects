@@ -1,6 +1,5 @@
 package exec;
 
-import dto.ProductDto;
 import dto.RequestDto;
 import dto.ResponseDto;
 import dto.ResponseStatus;
@@ -9,15 +8,13 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import util.ProductValidator;
 import vo.*;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * 상품 관리 프로그램 서버
@@ -25,7 +22,7 @@ import java.util.Vector;
 public class ProductServer {
 
     // 상품 저장소
-    private static final List<Product> productStore = new Vector<>();
+    private static final List<Product> productStore = Collections.synchronizedList(new ArrayList<>());
     private static int productNo = 0;
     private static final int PORT_NUM = 8888;
 
@@ -70,9 +67,8 @@ public class ProductServer {
          */
         @Override
         public void run() {
-            try {
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            try(BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 while(true) {
                     String line = reader.readLine();
                     System.out.println("request json: " + line);
@@ -101,25 +97,36 @@ public class ProductServer {
          */
         private RequestDto parseJsonToRequest(String json) {
             JSONParser parser = new JSONParser();
+            JSONObject request;
             try {
-                JSONObject request = (JSONObject) parser.parse(json);
+                request = (JSONObject) parser.parse(json);
                 String menu = (String) request.get("menu");
                 if(request.get("data") == null) {
                     return new RequestDto(menu);
                 }
-                JSONObject data = (JSONObject) request.get("data");
-
-                // TODO: 유효성 확인, 타입 변환 처리
-                ProductDto dto = new ProductDto(
-                        data.get("no") == null ? null : ((Long) data.get("no")).intValue(),
-                        (String) data.get("name"),
-                        data.get("price") == null ? null : ((Long) data.get("price")).intValue(),
-                        data.get("stock") == null ? null : ((Long) data.get("stock")).intValue()
-                );
-                return new RequestDto(menu, dto);
+                JSONObject dataJson = (JSONObject) request.get("data");
+                Map<String, Object> data = convertJsonToMap(dataJson);
+                return new RequestDto(menu, data);
             } catch (ParseException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        /**
+         * JsonObject을 HashMap 으로 변환하는 메서드
+         *
+         * @param object JSONObject
+         * @return HashMap
+         */
+        private Map<String, Object> convertJsonToMap(JSONObject object) {
+            Map<String, Object> map = new HashMap<>();
+            Set keys = object.keySet();
+            for(Object key : keys) {
+                if(key instanceof String k) {
+                    map.put(k, object.get(k));
+                }
+            }
+            return map;
         }
 
         /**
@@ -160,9 +167,9 @@ public class ProductServer {
         private ResponseDto productService(RequestDto requestDto) {
             try {
                 switch (requestDto.getMenu()) {
-                    case "1" -> createProduct(requestDto.getProduct());
-                    case "2" -> updateProduct(requestDto.getProduct());
-                    case "3" -> deleteProduct(requestDto.getProduct());
+                    case "1" -> createProduct(requestDto.getData());
+                    case "2" -> updateProduct(requestDto.getData());
+                    case "3" -> deleteProduct(requestDto.getData());
                     default -> throw new ProductException("존재하지 않는 메뉴입니다.");
                 }
                 return new ResponseDto<>(ResponseStatus.SUCCESS, productStore);
@@ -174,43 +181,58 @@ public class ProductServer {
         /**
          * 상품 생성 메서드
          *
-         * @param dto
+         * @param prams
          */
-        private void createProduct(ProductDto dto) {
-            Product newProduct = dto.toCreate(++productNo);
-            productStore.add(newProduct);
+        private void createProduct(Map<String, Object> prams) {
+            String name = prams.get("name").toString();
+            String price = prams.get("price").toString();
+            String stock = prams.get("stock").toString();
+            if(ProductValidator.validateName(name) && ProductValidator.validatePrice(price) && ProductValidator.validateStock(stock)) {
+                Product newProduct = new Product(++productNo, name, Integer.parseInt(price), Integer.parseInt(stock));
+                productStore.add(newProduct);
+            } else {
+                throw new ProductException("입력 정보가 올바르지 않아 상품 생성에 실패했습니다.");
+            }
         }
 
         /**
          * 상품 수정 메서드
          *
-         * @param dto
+         * @param prams
          */
-        private void updateProduct(ProductDto dto) {
-            Product findProduct = findProductByNo(dto.getNo());
-            findProduct.updateProduct(dto.getName(), dto.getPrice(), dto.getStock());
+        private void updateProduct(Map<String, Object> prams) {
+            String no = prams.get("no").toString();
+            String name = prams.get("name").toString();
+            String price = prams.get("price").toString();
+            String stock = prams.get("stock").toString();
+            if(ProductValidator.validateNo(no) && ProductValidator.validateName(name) && ProductValidator.validatePrice(price) && ProductValidator.validateStock(stock)) {
+                int index = findProductIndexByNo(Integer.parseInt(no));
+                Product findProduct = productStore.get(index);
+                findProduct.updateProduct(name, Integer.parseInt(price), Integer.parseInt(stock));
+            } else {
+                throw new ProductException("입력 정보가 올바르지 않아 상품 수정에 실패했습니다.");
+            }
         }
 
         /**
          * 상품 삭제 메서드
          *
-         * @param dto
+         * @param prams
          */
-        private void deleteProduct(ProductDto dto) {
-            Product findProduct = findProductByNo(dto.getNo());
-            productStore.remove(findProduct);
+        private void deleteProduct(Map<String, Object> prams) {
+            String no = prams.get("no").toString();
+            if(ProductValidator.validateNo(no)) {
+                int index = findProductIndexByNo(Integer.parseInt(no));
+                productStore.remove(index);
+            } else {
+                throw new ProductException("입력 정보가 올바르지 않아 상품 삭제에 실패했습니다.");
+            }
         }
 
-        /**
-         * 상품 조회 메서드
-         *
-         * @param no
-         * @return
-         */
-        private Product findProductByNo(int no) {
-            for (Product product : productStore) {
-                if(product.getNo() == no) {
-                    return product;
+        private int findProductIndexByNo(int no) {
+            for(int i = 0; i < productStore.size(); i++) {
+                if(productStore.get(i).getNo() == no) {
+                    return i;
                 }
             }
             throw new ProductException("존재하지 않는 상품입니다.");

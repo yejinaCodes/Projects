@@ -1,24 +1,26 @@
 package dto;
 
+import java.util.Map;
+
 public class RequestDto {
 
     private final String menu;
-    private ProductDto product;
+    private Map<String, Object> data;
 
     public RequestDto(String menu) {
         this.menu = menu;
     }
 
-    public RequestDto(String menu, ProductDto data) {
+    public RequestDto(String menu, Map<String, Object> data) {
         this.menu = menu;
-        this.product = data;
+        this.data = data;
     }
 
     public String getMenu() {
         return menu;
     }
 
-    public ProductDto getProduct() {
-        return product;
+    public Map<String, Object> getData() {
+        return data;
     }
 }
