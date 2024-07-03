@@ -74,10 +74,14 @@ public class ProductServer {
       try {
         System.out.println(">> user" + userNo++ + " enter << " + socket.getLocalSocketAddress());
         while (true) {
-
           //클라이언트의 요청을 json으로 받는다.
           RequestDto request = parseJson(serverReader.readLine());
 
+          System.out.println("request = " + request);
+          if (request == null) {
+            System.out.println("user" + (userNo - 1) + " out");
+            break;
+          }
           //클라이언트에게 보낼 응답
           ResponseDto response = productService(request);
 
@@ -90,6 +94,12 @@ public class ProductServer {
         }
       } catch (IOException e) {
         e.getStackTrace();
+      } finally {
+        try {
+          socket.close();
+        } catch (IOException e) {
+          e.getStackTrace();
+        }
       }
     }
 

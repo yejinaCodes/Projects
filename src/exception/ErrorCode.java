@@ -11,13 +11,13 @@ public enum ErrorCode {
   PRODUCT_NO_INFORMATION(404, "상품목록에 존재하지 않은 정보입니다.", "I001");
 
   private int status;
-  private String code;
   private String message;
+  private String code;
 
-  ErrorCode(int status, String code, String message) {
+  ErrorCode(int status, String message, String code) {
     this.status = status;
-    this.code = code;
     this.message = message;
+    this.code = code;
   }
 
   public int getStatus() {

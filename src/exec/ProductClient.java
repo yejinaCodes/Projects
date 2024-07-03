@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.ProtocolException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +36,19 @@ public class ProductClient {
       while (true) {
         printMenu();
         printProductList();
-        int inputNumber = Integer.parseInt(userInput.readLine());
+        String inputNumber = userInput.readLine();
 
-        switch (inputNumber) {
+        // userInput 유효성 검사: 빈문자, 숫자형식
+        if (inputNumber.isEmpty()) {
+          System.out.println(ErrorCode.INVALID_INPUT_BLANK.getMessage());
+          continue;
+        }
+        if (error.isValidNumber(inputNumber)) {
+          System.out.println(ErrorCode.INVALID_INPUT_NUMBER.getMessage());
+          continue;
+        }
+
+        switch (Integer.parseInt(inputNumber)) {
           case 1 -> {
             clientWriter.println(createProduct(userInput));
             clientWriter.flush();
@@ -56,14 +65,26 @@ public class ProductClient {
           }
 
           case 4 -> {
+            try {
+              System.out.println("프로그램을 종료합니다.");
+              userInput.close();
+              clientReader.close();
+              clientWriter.close();
+              socket.close();
+            } catch (IOException e) {
+              e.getStackTrace();
+            }
           }
-          default -> System.out.println("다시 입력해주세요.\n");
+
+          default -> {
+            System.out.println("다시 입력해주세요.\n");
+            continue;
+          }
         }
         ResponseDto response = parseJson(clientReader.readLine());
         products = new ArrayList<>();
         products.addAll(response.getData());
       }
-
     } catch (IOException e) {
       e.getStackTrace();
     }
@@ -114,7 +135,8 @@ public class ProductClient {
         if (error.isValidStock(stock)) {
           throw new ProductException(ErrorCode.INVALID_INPUT_STOCK);
         }
-        return makeJson(new RequestDto(1, new Product(0, name, Integer.parseInt(price), Integer.parseInt(stock))));
+        return makeJson(new RequestDto(1,
+            new Product(0, name, Integer.parseInt(price), Integer.parseInt(stock))));
       } catch (Exception e) {
         e.getStackTrace();
       }
@@ -181,7 +203,9 @@ public class ProductClient {
           throw new ProductException(ErrorCode.INVALID_INPUT_STOCK);
         }
 
-        return makeJson(new RequestDto(2, new Product(Integer.parseInt(productNo), name, Integer.parseInt(price), Integer.parseInt(stock))));
+        return makeJson(new RequestDto(2,
+            new Product(Integer.parseInt(productNo), name, Integer.parseInt(price),
+                Integer.parseInt(stock))));
       } catch (Exception e) {
         e.getStackTrace();
       }
@@ -209,13 +233,15 @@ public class ProductClient {
 
         for (Product product : products) {
           if (product.getNo() == Integer.parseInt(productNo)) {
-            deleteProduct = new Product(Integer.parseInt(productNo), product.getName(), product.getPrice(),
+            deleteProduct = new Product(Integer.parseInt(productNo), product.getName(),
+                product.getPrice(),
                 product.getStock());
             break;
           }
         }
         return makeJson(new RequestDto(3,
-            new Product(Integer.parseInt(productNo), deleteProduct.getName(), deleteProduct.getPrice(),
+            new Product(Integer.parseInt(productNo), deleteProduct.getName(),
+                deleteProduct.getPrice(),
                 deleteProduct.getStock())));
       } catch (Exception e) {
         e.getStackTrace();
