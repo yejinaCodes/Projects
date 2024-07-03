@@ -82,8 +82,12 @@ public class ProductClient {
           }
         }
         ResponseDto response = parseJson(clientReader.readLine());
-        products = new ArrayList<>();
-        products.addAll(response.getData());
+
+        //응답 결과가 success 일 때만 리스트 갱신
+        if (response.getStatus().equals("success")) {
+          products = new ArrayList<>();
+          products.addAll(response.getData());
+        }
       }
     } catch (IOException e) {
       e.getStackTrace();
