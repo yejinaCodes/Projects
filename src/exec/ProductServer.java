@@ -60,7 +60,6 @@ public class ProductServer {
 
     public SocketClient(Socket socket) {
       this.socket = socket;
-
       try {
         serverWriter = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
         serverReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -77,9 +76,8 @@ public class ProductServer {
           //클라이언트의 요청을 json으로 받는다.
           RequestDto request = parseJson(serverReader.readLine());
 
-          System.out.println("request = " + request);
           if (request == null) {
-            System.out.println("user" + (userNo - 1) + " out");
+            System.out.println("user out");
             break;
           }
           //클라이언트에게 보낼 응답
